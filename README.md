@@ -46,9 +46,6 @@ import {parseToRegex} from '@foxxmd/regex-buddy-core';
 const myReg = parseToRegex('/my (reg)?ular expression/', 'i');
 myReg.test('this string has my ReGuLaR expression in it'); // true
 
-const myStrReg = parseToRegex(/my (reg)?ular expression/i);
-myStrReg.test('this string has my ReGuLaR expression in it'); // true
-
 const myPlainStr = parseToRegex('just some plain string');
 console.log(myPlainStr); //undefined
 ```

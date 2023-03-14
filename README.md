@@ -79,7 +79,7 @@ containsStr.test('has the keyword anywhere in the string'); // true
 
 ### `parseRegex()`
 
-Takes a [`RegExp`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp) and string value to test. and returns:
+Takes a [`RegExp`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp) and string value to test and returns:
 
 * If no matches => `undefined`
 * If any matches => An array of [`RegExResult`](#regexresult)
@@ -246,7 +246,7 @@ An object that defines how a string is handled prior to usage as a literal strin
 Criteria used to perform a search-and-replace operation on a string. This is very similar to [String.replace()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace) except that `string` value used for `search` will be converted to RegExp first using [`parseToRegexOrLiteralSearch()`](#parsetoregexorliteralsearch).
 
 * `search:  (string | RegExp)` - The search value to test for. Can be a normal string (converted to a case-sensitive literal) or a valid regular expression as a string, or an actual RegExp object.
-* `replace: string` - The replacement string/value to use when search is found. This can be a literal string like `'replace with this`, an empty string to remove the search value (`''`), or a [special regex value](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace).
+* `replace: string` - The replacement string/value to use when search is found. This can be a literal string like `'replace with this'`, an empty string to remove the search value (`''`), or a [special regex value](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace#specifying_a_string_as_the_replacement).
 
 ### `RegExResult`
 

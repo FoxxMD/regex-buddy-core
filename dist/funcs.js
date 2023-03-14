@@ -1,0 +1,164 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.searchAndReplace = exports.testMaybeRegex = exports.parseRegexSingle = exports.parseRegex = exports.parseToRegexOrLiteralSearch = exports.parseToRegex = exports.literalSearchBehaviors = void 0;
+const regexp_regexp_1 = __importDefault(require("@stdlib/regexp-regexp"));
+const ReReg = (0, regexp_regexp_1.default)();
+const ESCAPE_SEARCH = new RegExp(/[-\/\\^$*+?.()|[\]{}]/g);
+const ESCAPE_REPLACE = '\\$&';
+exports.literalSearchBehaviors = ['startsWith', 'endsWith', 'contains', 'exact'];
+const asLiteralSearchBehavior = (val) => {
+    return exports.literalSearchBehaviors.includes(val);
+};
+/**
+ * Tries to parse a string as a regular expression
+ *
+ * @param {string} val The string to parse
+ * @param {string} [defaultFlags] Flags to set on the parsed Regular Expression if it does not have its own
+ * */
+const parseToRegex = (val, defaultFlags) => {
+    const result = ReReg.exec(val);
+    if (result !== null) {
+        // index 0 => full string
+        // index 1 => regex without flags and forward slashes
+        // index 2 => flags
+        const flags = result[2] === '' ? (defaultFlags || '') : result[2];
+        return new RegExp(result[1], flags);
+    }
+    return undefined;
+};
+exports.parseToRegex = parseToRegex;
+/**
+ * Tries to parse a string as a regular expression. If this fails it tries to convert the string into a Regular Expression with a literal search for the string value.
+ *
+ * @param {string} val The string to parse
+ * @param {(string|LiteralSearchOptions)} [options] Options related to how to parse the string value for the literal search
+ * */
+const parseToRegexOrLiteralSearch = (val, options) => {
+    const realOpts = typeof options === 'string' ? { flags: options } : options;
+    const defaultFlags = realOpts?.flags;
+    let reg = (0, exports.parseToRegex)(val, realOpts?.flags);
+    if (reg !== undefined) {
+        return reg;
+    }
+    const { trim = false, behavior: behaviorVal = 'exact', transform: transformVal = [], escapeTransform = { search: ESCAPE_SEARCH, replace: ESCAPE_REPLACE } } = realOpts || {};
+    if (!asLiteralSearchBehavior(behaviorVal)) {
+        throw new Error(`The given behavior '${behaviorVal}' when parsing string ${val} is not valid, must be one of: ${exports.literalSearchBehaviors.join(', ')}`);
+    }
+    const behavior = behaviorVal;
+    const transformVals = Array.isArray(transformVal) ? transformVal : [transformVal];
+    const transform = transformVals;
+    let cleanVal = trim ? val.trim() : val;
+    cleanVal = (0, exports.searchAndReplace)(val, transform.concat(escapeTransform));
+    switch (behavior) {
+        case 'startsWith':
+            reg = (0, exports.parseToRegex)(`/^${cleanVal}/${defaultFlags ?? ''}`);
+            break;
+        case 'endsWith':
+            reg = (0, exports.parseToRegex)(`/${cleanVal}$/${defaultFlags ?? ''}`);
+            break;
+        case 'contains':
+            reg = (0, exports.parseToRegex)(`/${cleanVal}/${defaultFlags ?? ''}`);
+            break;
+        case 'exact':
+            reg = (0, exports.parseToRegex)(`/^${cleanVal}$/${defaultFlags ?? ''}`);
+            break;
+    }
+    if (reg === undefined) {
+        throw new Error(`Could not convert test value to a valid regex: ${val}`);
+    }
+    return reg;
+};
+exports.parseToRegexOrLiteralSearch = parseToRegexOrLiteralSearch;
+/**
+ * Tests a value against a given regular expression and returns a list of normalized results.
+ *
+ * @param {RegExp} reg The regular expression to use
+ * @param {string} val The string to test with the regular expression
+ * */
+const parseRegex = (reg, val) => {
+    if (reg.global) {
+        const g = Array.from(val.matchAll(reg));
+        if (g.length === 0) {
+            return undefined;
+        }
+        return g.map(x => {
+            return {
+                match: x[0],
+                index: x.index,
+                groups: x.slice(1),
+                named: x.groups || {},
+            };
+        });
+    }
+    const m = val.match(reg);
+    if (m === null) {
+        return undefined;
+    }
+    return [{
+            match: m[0],
+            index: m.index,
+            groups: m.slice(1),
+            named: m.groups || {}
+        }];
+};
+exports.parseRegex = parseRegex;
+/**
+ * Tests a value against a regular expression and returns a result if only one result is found.
+ *
+ * * If the expression does not match undefined is returned
+ * * If the expression uses global 'g' flag and more than one result is found an error is thrown
+ *
+ * @param {RegExp} reg The regular expression to use
+ * @param {string} val The string to test with the regular expression
+ * */
+const parseRegexSingle = (reg, val) => {
+    const results = (0, exports.parseRegex)(reg, val);
+    if (results !== undefined) {
+        if (results.length > 1) {
+            throw new Error(`Expected Regex to match once but got ${results.length} results. Either Regex must NOT be global (using 'g' flag) or parsed value must only match regex once. Given: ${val} || Regex: ${reg.toString()}`);
+        }
+        return results[0];
+    }
+    return undefined;
+};
+exports.parseRegexSingle = parseRegexSingle;
+/**
+ * Tries to parse a string as a regular expression, falling back to literal search, and then tests a given value
+ *
+ * Returns a tuple of [matchedExpressionBool,matchedValString]
+ *
+ * @param {string} test The string to use a regular expression
+ * @param {string} subject The string to test with the regular expression
+ * @param {(string|LiteralSearchOptions)} [options] Options related to how to parse the string value for the literal search
+ * */
+const testMaybeRegex = (test, subject, options = {
+    flags: 'i',
+    behavior: 'contains'
+}) => {
+    let reg = (0, exports.parseToRegexOrLiteralSearch)(test, options);
+    return [reg.test(subject), reg.toString()];
+};
+exports.testMaybeRegex = testMaybeRegex;
+/**
+ * Perform one or more search-and-replace operations on a string where the 'search' value may be a regular expression, a string to parse as a regular expression, or a string to use as a literal search expression
+ *
+ * @param {string} val The string to perform search-and-replace operations on
+ * @param {SearchAndReplaceRegExp[]} ops An array of search-and-replace criteria
+ * @param {(string|LiteralSearchOptions)} [options] Options related to how to parse the string value for the literal search
+ * */
+const searchAndReplace = (val, ops, options = {
+    flags: 'ig',
+    behavior: 'contains'
+}) => {
+    if (ops.length === 0) {
+        return val;
+    }
+    return ops.reduce((acc, curr) => {
+        let reg = curr.search instanceof RegExp ? curr.search : (0, exports.parseToRegexOrLiteralSearch)(curr.search, options);
+        return acc.replace(reg ?? val, curr.replace);
+    }, val);
+};
+exports.searchAndReplace = searchAndReplace;

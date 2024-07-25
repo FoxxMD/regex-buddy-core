@@ -3,8 +3,8 @@
 **/src/**/*.d.ts
 node_modules/
 /.idea
-/docs
 .tshy
 .tshy-build-tmp
 dist
 tmp-*
+/typedocs

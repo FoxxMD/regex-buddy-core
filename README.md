@@ -1,6 +1,12 @@
-# regex-buddy-core
+# @foxxmd/regex-buddy-core
+
+[![Latest Release](https://img.shields.io/github/v/release/foxxmd/regex-buddy-core)](https://github.com/FoxxMD/regex-buddy-core)
+[![NPM Version](https://img.shields.io/npm/v/%40foxxmd%2Fregex-buddy-core)](https://www.npmjs.com/package/@foxxmd/regex-buddy-core)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Javascript helper functions for handling [Regular Expressions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions) and parsing user input as Regular Expressions
+
+[**Docs best viewed at foxxmd.github.io/regex-buddy-core**](https://foxxmd.github.io/regex-buddy-core)
 
 # Why?
 

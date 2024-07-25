@@ -1,15 +1,25 @@
 {
-  "extends": "@tsconfig/node16/tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ESNext",
     "declaration": true,
-    "outDir": "./dist"
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
+    "useDefineForClassFields": true,
+    "isolatedModules": true,
+    "noEmit": true
   },
-  "typeRoots": [
-    "./src/types.d.ts"
-  ],
+  "ts-node": {
+    "esm": true
+  },
   "include": [
-      "src/**/*"
+      "src/**/*",
+    "tests/**/*.ts"
   ],
   "exclude": [
     "node_modules"

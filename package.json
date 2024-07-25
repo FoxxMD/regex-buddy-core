@@ -1,33 +1,77 @@
 {
   "name": "@foxxmd/regex-buddy-core",
-  "version": "0.0.2",
+  "version": "0.1.0",
+  "type": "module",
   "description": "Helper functions for handling Regular Expressions and parsing user input as Regular Expressions",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/commonjs/index.js",
+  "types": "./dist/commonjs/index.d.ts",
   "repository": "https://github.com/FoxxMD/regex-buddy-core",
+  "keywords": [
+    "regex",
+    "regexp",
+    "regular",
+    "expression",
+    "parser",
+    "match",
+    "literal",
+    "string"
+  ],
   "files": [
-    "/dist"
+    "dist"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --reporter spec --recursive ./tests/*.test.ts",
+    "typedoc": "typedoc --plugin typedoc-plugin-missing-exports --plugin @8hobbies/typedoc-plugin-plausible",
+    "typedoc:watch": "typedoc --plugin typedoc-plugin-missing-exports --plugin @8hobbies/typedoc-plugin-plausible --watch",
+    "build": "tsc",
+    "prepare": "tshy"
   },
   "engines": {
-    "node": ">=16.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=9.3.0"
   },
-  "exports": {
-    ".": {
-      "types": "./src/types.d.ts",
-      "import": "./dist/index.js"
-    }
+  "tshy": {
+    "project": "./tsconfig.build.json",
+    "exports": {
+      "./package.json": "./package.json",
+      ".": "./src/index.js"
+    },
+    "dialects": [
+      "esm",
+      "commonjs"
+    ]
   },
   "author": "FoxxMD",
   "license": "MIT",
   "dependencies": {
-    "@stdlib/regexp-regexp": "^0.0.8"
+    "@stdlib/regexp-regexp": "^0.2.1"
   },
   "devDependencies": {
-    "typescript": "^4.9.5",
-    "@tsconfig/node16": "^1.0.3"
-  }
+    "@8hobbies/typedoc-plugin-plausible": "^2.0.0",
+    "@types/chai": "^4.3.0",
+    "@types/mocha": "^9.1.0",
+    "chai": "^4.3.6",
+    "mocha": "^10.2.0",
+    "tshy": "^1.18.0",
+    "tsx": "^4.7.1",
+    "typedoc": "^0.26.2",
+    "typedoc-plugin-missing-exports": "^3.0.0",
+    "typescript": "^5.3.3"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "source": "./src/index.js",
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "source": "./src/index.js",
+        "types": "./dist/commonjs/index.d.ts",
+        "default": "./dist/commonjs/index.js"
+      }
+    }
+  },
+  "module": "./dist/esm/index.js"
 }

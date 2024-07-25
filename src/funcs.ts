@@ -63,8 +63,7 @@ export const parseToRegexOrLiteralSearch = (val: string, options?: string | Lite
     const transformVals = Array.isArray(transformVal) ? transformVal : [transformVal];
     const transform: SearchAndReplaceRegExp[] = transformVals as SearchAndReplaceRegExp[];
 
-    let cleanVal: string = trim ? val.trim() : val;
-    cleanVal = searchAndReplace(val, transform.concat(escapeTransform));
+    const cleanVal = searchAndReplace(trim ? val.trim() : val, transform.concat(escapeTransform));
 
     switch (behavior) {
         case 'startsWith':
@@ -168,7 +167,7 @@ export const testMaybeRegex = (test: string, subject: string, options: string | 
 export const searchAndReplace = (val: string, ops: SearchAndReplaceRegExp[], options: string | LiteralSearchOptions = {
     flags: 'ig',
     behavior: 'contains'
-}) => {
+}): string => {
     if (ops.length === 0) {
         return val;
     }
@@ -176,4 +175,14 @@ export const searchAndReplace = (val: string, ops: SearchAndReplaceRegExp[], opt
         let reg = curr.search instanceof RegExp ? curr.search : parseToRegexOrLiteralSearch(curr.search, options);
         return acc.replace(reg ?? val, curr.replace);
     }, val);
+}
+
+export const isRegExResult = (val: any): val is RegExResult => {
+    if (val === undefined || val === null || typeof val !== 'object') {
+        return false;
+    }
+    return ('match' in val && typeof val.match === 'string')
+        && ('groups' in val && Array.isArray(val.groups))
+        && ('named' in val && typeof val.named === 'object')
+        && ('index' in val && typeof val.index === 'number');
 }

@@ -21,8 +21,8 @@
   ],
   "scripts": {
     "test": "mocha --reporter spec --recursive ./tests/*.test.ts",
-    "typedoc": "typedoc --plugin typedoc-plugin-missing-exports --plugin @8hobbies/typedoc-plugin-plausible",
-    "typedoc:watch": "typedoc --plugin typedoc-plugin-missing-exports --plugin @8hobbies/typedoc-plugin-plausible --watch",
+    "typedoc": "typedoc",
+    "typedoc:watch": "typedoc --watch",
     "build": "tsc",
     "prepare": "tshy"
   },
@@ -56,6 +56,7 @@
     "tsx": "^4.7.1",
     "typedoc": "^0.26.2",
     "typedoc-plugin-missing-exports": "^3.0.0",
+    "typedoc-plugin-replace-text": "^4.0.0",
     "typescript": "^5.3.3"
   },
   "exports": {

@@ -1,5 +1,5 @@
 import {parseRegex, parseToRegex, parseToRegexOrLiteralSearch, parseRegexSingle, searchAndReplace, testMaybeRegex, isRegExResult} from './funcs.js';
-import {LiteralSearchBehavior, LiteralSearchOptions, RegExResult, SearchAndReplaceRegExp} from './types.js';
+import {LiteralSearchBehavior, LiteralSearchOptions, RegExResult, SearchAndReplaceRegExp, NamedGroup} from './types.js';
 
 export {
     isRegExResult,
@@ -15,5 +15,6 @@ export type {
     LiteralSearchOptions,
     LiteralSearchBehavior,
     RegExResult,
-    SearchAndReplaceRegExp
+    SearchAndReplaceRegExp,
+    NamedGroup
 }

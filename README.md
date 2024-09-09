@@ -67,6 +67,12 @@ Tries to convert a regular string into a RegExp object using [`parseToRegex()`](
   * An optional `string` of [flags](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/flags) to add to the parsed expression, if none were found.
   * A [`LiteralSearchOptions`](#literalsearchoptions) object used to customize the literal search expression generated.
 
+#### `parseToRegexOrLiteralSearchCached()`
+
+A wrapped version of `parseToRegexOrLiteralSearch` that caches `RegExp` based on unique inputs of `val` `options.behavior` and default flags.
+
+Provide either a number of max number of cached entries of provide your own implementation of `SimpleCache`.
+
 #### Example
 
 ```js

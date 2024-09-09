@@ -1,6 +1,12 @@
 import { describe } from "mocha";
 import chai, { expect } from "chai";
-import { isRegExResult, parseRegexSingle, searchAndReplace, testMaybeRegex } from "../src/funcs.js";
+import {
+    isRegExResult,
+    parseRegexSingle,
+    parseToRegexOrLiteralSearchCached,
+    searchAndReplace,
+    testMaybeRegex
+} from "../src/funcs.js";
 import { LiteralSearchBehavior, parseRegex, parseToRegex, parseToRegexOrLiteralSearch } from "../src/index.js";
 
 describe('String to Regex', function () {
@@ -108,6 +114,20 @@ describe('String to Literal or Regex', function () {
                 expect(reg.toString()).is.eq(behavior.reg)
             });
         }
+    });
+
+    describe('Caching', function () {
+        it('Built-in caching works', function () {
+            const cachedParser = parseToRegexOrLiteralSearchCached(2);
+
+            const reg = cachedParser('/my (reg)?ular expression/');
+            expect(reg).is.not.undefined;
+            expect(reg.toString()).is.eq('/my (reg)?ular expression/')
+
+            const cachedReg = cachedParser('/my (reg)?ular expression/');
+            expect(cachedReg).is.not.undefined;
+            expect(cachedReg.toString()).is.eq('/my (reg)?ular expression/')
+        });
     });
 });
 

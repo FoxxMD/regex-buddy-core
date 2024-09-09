@@ -1,10 +1,11 @@
-import {parseRegex, parseToRegex, parseToRegexOrLiteralSearch, parseRegexSingle, searchAndReplace, testMaybeRegex, isRegExResult} from './funcs.js';
-import {LiteralSearchBehavior, LiteralSearchOptions, RegExResult, SearchAndReplaceRegExp, NamedGroup} from './types.js';
+import {parseRegex, parseToRegex, parseToRegexOrLiteralSearch, parseToRegexOrLiteralSearchCached, parseRegexSingle, searchAndReplace, testMaybeRegex, isRegExResult} from './funcs.js';
+import {LiteralSearchBehavior, LiteralSearchOptions, RegExResult, SearchAndReplaceRegExp, NamedGroup, SimpleCache, CacheOption} from './types.js';
 
 export {
     isRegExResult,
     parseToRegex,
     parseToRegexOrLiteralSearch,
+    parseToRegexOrLiteralSearchCached,
     parseRegex,
     parseRegexSingle,
     searchAndReplace,
@@ -16,5 +17,7 @@ export type {
     LiteralSearchBehavior,
     RegExResult,
     SearchAndReplaceRegExp,
-    NamedGroup
+    NamedGroup,
+    CacheOption,
+    SimpleCache
 }

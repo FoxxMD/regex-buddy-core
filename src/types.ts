@@ -74,4 +74,19 @@ export interface LiteralSearchOptions {
      * A search-and-replace criteria used to escape the string value before it is inserted into the literal search expression. A default escape function is provided.
      * */
     escapeTransform?: SearchAndReplaceRegExp
+
+    /**
+     * A caching implementation for caching unique regex strings + behavior + default flags
+     * */
+    cache?: SimpleCache
+}
+
+/**
+ * The max number of entries or your own implementation of SimpleCache
+ * */
+export type CacheOption = number | SimpleCache;
+
+export interface SimpleCache {
+    get(key: string): RegExp | undefined
+    set(key: string, value: RegExp): void
 }

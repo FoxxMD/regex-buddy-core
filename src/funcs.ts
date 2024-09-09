@@ -1,5 +1,12 @@
 import reRegExp from '@stdlib/regexp-regexp';
-import {LiteralSearchBehavior, LiteralSearchOptions, RegExResult, SearchAndReplaceRegExp} from "./types.js";
+import { LRUMap } from "ts_lru_map";
+import {
+    CacheOption,
+    LiteralSearchBehavior,
+    LiteralSearchOptions,
+    RegExResult,
+    SearchAndReplaceRegExp, SimpleCache
+} from "./types.js";
 
 const ReReg = reRegExp();
 
@@ -37,24 +44,33 @@ export const parseToRegex = (val: string, defaultFlags?: string): RegExp | undef
  * @param {string} val The string to parse
  * @param {(string|LiteralSearchOptions)} [options] Options related to how to parse the string value for the literal search
  * */
-export const parseToRegexOrLiteralSearch = (val: string, options?: string | LiteralSearchOptions): RegExp => {
+export const parseToRegexOrLiteralSearch = (val: string, options: string | LiteralSearchOptions = {}): RegExp => {
 
     const realOpts = typeof options === 'string' ? {flags: options} : options;
-
-    const defaultFlags = realOpts?.flags;
-
-    let reg: RegExp | undefined = parseToRegex(val, realOpts?.flags);
-
-    if (reg !== undefined) {
-        return reg;
-    }
-
     const {
         trim = false,
+        flags,
         behavior: behaviorVal = 'exact',
         transform: transformVal = [],
         escapeTransform = {search: ESCAPE_SEARCH, replace: ESCAPE_REPLACE}
-    } = realOpts || {};
+    } = realOpts;
+
+    const defaultFlags = flags;
+
+    let reg: RegExp | undefined;
+
+    reg = realOpts.cache?.get(`${val}${defaultFlags ?? ''}`);
+    if(reg !== undefined) {
+        return reg;
+    }
+
+    reg = parseToRegex(val, flags);
+
+    if (reg !== undefined) {
+        realOpts.cache?.set(`${val}${defaultFlags ?? ''}`, reg);
+        return reg;
+    }
+
     if (!asLiteralSearchBehavior(behaviorVal)) {
         throw new Error(`The given behavior '${behaviorVal}' when parsing string ${val} is not valid, must be one of: ${literalSearchBehaviors.join(', ')}`);
     }
@@ -82,7 +98,32 @@ export const parseToRegexOrLiteralSearch = (val: string, options?: string | Lite
     if (reg === undefined) {
         throw new Error(`Could not convert test value to a valid regex: ${val}`);
     }
+    realOpts.cache?.set(`${val}${defaultFlags ?? ''}${behavior}`, reg);
     return reg;
+}
+
+const asSimpleCache = (val: unknown): val is SimpleCache => {
+    return val !== null && typeof val === 'object' && 'set' in val && 'get' in val;
+}
+
+/**
+ * A wrapped version of parseToRegexOrLiteralSearch that caches RegExp's based on inputs of RegExp string + behavior + default flags
+ * */
+export const parseToRegexOrLiteralSearchCached = (option: CacheOption)  => {
+    let cache: SimpleCache;
+    if(typeof option === 'number') {
+        cache = new LRUMap<string, RegExp>(option);
+    } else if(asSimpleCache(option)) {
+        cache = option;
+    }
+    return (...args: Parameters<typeof parseToRegexOrLiteralSearch>) => {
+        let opts: LiteralSearchOptions;
+        const maybeOpts = args[1] ?? {};
+        if(typeof maybeOpts === 'string') {
+            opts = {flags: maybeOpts};
+        }
+        return parseToRegexOrLiteralSearch(args[0], {...opts, cache});
+    };
 }
 
 /**

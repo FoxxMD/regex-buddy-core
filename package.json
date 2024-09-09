@@ -1,6 +1,6 @@
 {
   "name": "@foxxmd/regex-buddy-core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "description": "Helper functions for handling Regular Expressions and parsing user input as Regular Expressions",
   "main": "./dist/commonjs/index.js",

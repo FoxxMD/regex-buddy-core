@@ -202,4 +202,20 @@ describe('Search and Replace', function () {
             replace: ''
         }])).to.eq('my  super normal string');
     });
+
+    it('does not replace if test does not pass', function () {
+        expect(searchAndReplace('my normal super normal string', [{
+            search: '/normal/i',
+            replace: '',
+            test: (_) => false
+        }])).to.eq('my normal super normal string');
+    });
+
+    it('does replace if test does pass', function () {
+        expect(searchAndReplace('my normal super normal string', [{
+            search: '/normal/i',
+            replace: '',
+            test: (_) => true
+        }])).to.eq('my  super normal string');
+    });
 });

@@ -3,7 +3,7 @@ import { LRUMap } from "ts_lru_map";
 import {
     CacheOption,
     LiteralSearchBehavior,
-    LiteralSearchOptions,
+    LiteralSearchOptions, LiteralSearchOptionsOrFlag,
     RegExResult,
     SearchAndReplaceRegExp, SimpleCache
 } from "./types.js";
@@ -46,7 +46,7 @@ export const parseToRegex = (val: string, defaultFlags?: string): RegExp | undef
  * */
 export const parseToRegexOrLiteralSearch = (val: string, options: string | LiteralSearchOptions = {}): RegExp => {
 
-    const realOpts = typeof options === 'string' ? {flags: options} : options;
+    const realOpts = optsOrFlagToRealOptions(options);
     const {
         trim = false,
         flags,
@@ -107,22 +107,14 @@ const asSimpleCache = (val: unknown): val is SimpleCache => {
 }
 
 /**
- * A wrapped version of parseToRegexOrLiteralSearch that caches RegExp's based on inputs of RegExp string + behavior + default flags
+ * A wrapped version of `parseToRegexOrLiteralSearch` that caches RegExp's based on inputs of RegExp string + behavior + default flags
+ *
+ * @see {@link parseToRegexOrLiteralSearch}
  * */
-export const parseToRegexOrLiteralSearchCached = (option: CacheOption)  => {
-    let cache: SimpleCache;
-    if(typeof option === 'number') {
-        cache = new LRUMap<string, RegExp>(option);
-    } else if(asSimpleCache(option)) {
-        cache = option;
-    }
+export const parseToRegexOrLiteralSearchCached = (option: CacheOption): typeof parseToRegexOrLiteralSearch => {
+    const cache = implCache(option);
     return (...args: Parameters<typeof parseToRegexOrLiteralSearch>) => {
-        let opts: LiteralSearchOptions;
-        const maybeOpts = args[1] ?? {};
-        if(typeof maybeOpts === 'string') {
-            opts = {flags: maybeOpts};
-        }
-        return parseToRegexOrLiteralSearch(args[0], {...opts, cache});
+        return parseToRegexOrLiteralSearch(args[0], {cache, ...optsOrFlagToRealOptions(args[1] ?? {})});
     };
 }
 
@@ -181,6 +173,10 @@ export const parseRegexSingle = (reg: RegExp, val: string): RegExResult | undefi
     return undefined;
 }
 
+const testMaybeOptionDefaults: LiteralSearchOptions = {
+    flags: 'i',
+    behavior: 'contains'
+};
 /**
  * Tries to parse a string as a regular expression, falling back to literal search, and then tests a given value
  *
@@ -190,14 +186,28 @@ export const parseRegexSingle = (reg: RegExp, val: string): RegExResult | undefi
  * @param {string} subject The string to test with the regular expression
  * @param {(string|LiteralSearchOptions)} [options] Options related to how to parse the string value for the literal search
  * */
-export const testMaybeRegex = (test: string, subject: string, options: string | LiteralSearchOptions = {
-    flags: 'i',
-    behavior: 'contains'
-}): [boolean, string] => {
-    let reg = parseToRegexOrLiteralSearch(test, options);
+export const testMaybeRegex = (test: string, subject: string, options: string | LiteralSearchOptions = {}): [boolean, string] => {
+    let reg = parseToRegexOrLiteralSearch(test, {...testMaybeOptionDefaults, ...optsOrFlagToRealOptions(options)});
     return [reg.test(subject), reg.toString()];
 }
 
+/**
+ * A wrapped version of `testMaybeRegex` that caches RegExp's based on inputs of + default flags
+ *
+ * @see {@link testMaybeRegex}
+ * */
+export const testMaybeRegexCached = (option: CacheOption): typeof testMaybeRegex  => {
+    const cache = implCache(option);
+
+    return (...args: Parameters<typeof testMaybeRegex>) => {
+        return testMaybeRegex(args[0], args[1], {cache, ...optsOrFlagToRealOptions(args[2] ?? {})});
+    };
+}
+
+const testSearchAndReplaceDefaults: LiteralSearchOptions = {
+    flags: 'ig',
+    behavior: 'contains'
+};
 /**
  * Perform one or more search-and-replace operations on a string where the 'search' value may be a regular expression, a string to parse as a regular expression, or a string to use as a literal search expression
  *
@@ -205,17 +215,33 @@ export const testMaybeRegex = (test: string, subject: string, options: string | 
  * @param {SearchAndReplaceRegExp[]} ops An array of search-and-replace criteria
  * @param {(string|LiteralSearchOptions)} [options] Options related to how to parse the string value for the literal search
  * */
-export const searchAndReplace = (val: string, ops: SearchAndReplaceRegExp[], options: string | LiteralSearchOptions = {
-    flags: 'ig',
-    behavior: 'contains'
-}): string => {
+export const searchAndReplace = (val: string, ops: SearchAndReplaceRegExp[], options: string | LiteralSearchOptions = {}): string => {
     if (ops.length === 0) {
         return val;
     }
     return ops.reduce((acc, curr) => {
-        let reg = curr.search instanceof RegExp ? curr.search : parseToRegexOrLiteralSearch(curr.search, options);
+        if(curr.test !== undefined) {
+            const shouldRun = curr.test(curr);
+            if(!shouldRun) {
+                return acc;
+            }
+        }
+        let reg = curr.search instanceof RegExp ? curr.search : parseToRegexOrLiteralSearch(curr.search, {...testSearchAndReplaceDefaults, ...optsOrFlagToRealOptions(options)});
         return acc.replace(reg ?? val, curr.replace);
     }, val);
+}
+
+/**
+ * A wrapped version of `searchAndReplace` that caches RegExp
+ *
+ * @see {@link searchAndReplace}
+ * */
+export const searchAndReplaceCached = (option: CacheOption): typeof searchAndReplace  => {
+    const cache = implCache(option);
+
+    return (...args: Parameters<typeof searchAndReplace>) => {
+        return searchAndReplace(args[0], args[1], {cache, ...optsOrFlagToRealOptions(args[2] ?? {})});
+    };
 }
 
 export const isRegExResult = (val: any): val is RegExResult => {
@@ -226,4 +252,35 @@ export const isRegExResult = (val: any): val is RegExResult => {
         && ('groups' in val && Array.isArray(val.groups))
         && ('named' in val && typeof val.named === 'object')
         && ('index' in val && typeof val.index === 'number');
+}
+
+const implCache = (option: CacheOption): SimpleCache => {
+    let cache: SimpleCache;
+    if(typeof option === 'number') {
+        cache = new LRUMap<string, RegExp>(option);
+    } else if(asSimpleCache(option)) {
+        cache = option;
+    }
+    return cache;
+}
+
+const optsOrFlagToRealOptions = (val: LiteralSearchOptionsOrFlag): LiteralSearchOptions => {
+    return typeof val === 'string' ? {flags: val} : val;
+}
+
+/**
+ * Convenience function that creates a shared cached and returns an object containing cached version of all available-to-wrap functions
+ *
+ * @see {@link searchAndReplaceCached}
+ * @see {@link testMaybeRegexCached}
+ * @see {@link parseToRegexOrLiteralSearchCached}
+ * */
+export const cacheFunctions = (option: CacheOption) => {
+    const cache = implCache(option);
+
+    return {
+        parseToRegexOrLiteralSearch: parseToRegexOrLiteralSearchCached(cache),
+        testMaybeRegex: testMaybeRegexCached(cache),
+        searchAndReplace: searchAndReplaceCached(cache)
+    }
 }

@@ -27,9 +27,7 @@ export interface SearchAndReplaceRegExp {
      *
      * Can be a normal string (converted to a case-sensitive literal) or a valid regular expression as a string, or an actual RegExp object
      *
-     * EX `["find this string", "/some string*\/ig"]`
-     *
-     * @examples ["find this string", "/some string*\/ig"]
+     * @example ["find this string", "/some string*\/ig"]
      * */
     search: string | RegExp
 
@@ -41,6 +39,11 @@ export interface SearchAndReplaceRegExp {
      * See replacement here for more information: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace
      * */
     replace: string
+
+    /**
+     * An optional function to execute before running this search-and-replace that decides if it should run at all
+     * */
+    test?: (obj: SearchAndReplaceRegExp) => boolean
 }
 
 export type LiteralSearchBehavior = 'startsWith' | 'endsWith' | 'contains' | 'exact';
@@ -80,6 +83,8 @@ export interface LiteralSearchOptions {
      * */
     cache?: SimpleCache
 }
+
+export type LiteralSearchOptionsOrFlag = string | LiteralSearchOptions;
 
 /**
  * The max number of entries or your own implementation of SimpleCache
